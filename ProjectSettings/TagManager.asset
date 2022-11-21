@@ -5,6 +5,11 @@ TagManager:
   serializedVersion: 2
   tags:
   - Bullet
+  - AxeHead
+  - Pickaxe
+  - Rock
+  - Tree
+  - Shield
   layers:
   - Default
   - TransparentFX
@@ -14,7 +19,7 @@ TagManager:
   - UI
   - Player
   - Obstacles
-  - 
+  - Pickupable
   - 
   - 
   - 

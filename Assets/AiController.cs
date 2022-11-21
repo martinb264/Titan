@@ -11,8 +11,12 @@ public class AiController : MonoBehaviour
     public NavMeshAgent navMeshAgent;
     public float startWaitTime = 4;
     public float timeToRotate = 2;
+    [SerializeField]
     private float speedWalk = 1;
+    [SerializeField]
     private float speedRun = 2;
+
+    private bool isStunned = false;
 
     public static event Action<AiController> OnEnemyKilled;
     public float health;
@@ -34,6 +38,7 @@ public class AiController : MonoBehaviour
     Vector3 playerLastPosition = Vector3.zero;
     Vector3 m_PlayerPosition;
 
+    public Rigidbody m_Rigidbody;
     float m_WaitTime;
     float m_TimeToRotate;
     bool m_PlayerInRange;
@@ -43,6 +48,7 @@ public class AiController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        
         print("enemy");
         health = maxHealth;
         m_PlayerPosition = Vector3.zero;
@@ -52,6 +58,8 @@ public class AiController : MonoBehaviour
         m_PlayerNear = false;
         m_WaitTime = startWaitTime;                 //  Set the wait time variable that will change
         m_TimeToRotate = timeToRotate;
+        m_Rigidbody = GetComponent<Rigidbody>();
+       
 
         m_CurrentWaypointIndex = 0;                 //  Set the initial waypoint
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -65,16 +73,26 @@ public class AiController : MonoBehaviour
     {
         health -= damage;
         print("tessa");
+        print(health);
         if ( health <= 0)
         {
+            Stop();
             dead = true;
-            animator.SetTrigger("Death");
-            print("test123");
-            
-            OnEnemyKilled?.Invoke(this);
-            playerController.updateScore();
+            isStunned = true;
+            print("death");
+            animator.SetBool("Stunned Loop", false);
+            animator.SetBool("WalkForward", false);
+            animator.SetBool("Run Forward", false);
+            animator.SetBool("Death", true);
+           
+           
             
         }
+    }
+
+    public void death()
+    {
+        Destroy(gameObject);
     }
 
     public void EnemyDeath()
@@ -84,23 +102,28 @@ public class AiController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        EnviromentView();
-        if(dead == true)
+        if (isStunned == false && dead == false)
         {
-            speedRun = 0;
-            speedWalk = 0;
-        }
-        else if(!m_IsPatrol)
-        {
-            animator.SetBool("Run", true);
-            animator.SetBool("Walk", false);
-            Chasing();
-        }
-        else
-        {
-            animator.SetBool("Walk", true);
-            animator.SetBool("Run", false);
-            Patroling();
+            EnviromentView();
+            if (dead == true)
+            {
+                speedRun = 0;
+                speedWalk = 0;
+            }
+            else if (!m_IsPatrol)
+            {
+              
+                animator.SetBool("Run Forward", true);
+                animator.SetBool("WalkForward", false);
+                Chasing();
+            }
+            else
+            {
+               
+                animator.SetBool("WalkForward", true);
+                animator.SetBool("Run Forward", false);
+                Patroling();
+            }
         }
     }
     void Move(float speed)
@@ -108,15 +131,25 @@ public class AiController : MonoBehaviour
         navMeshAgent.isStopped = false;
         navMeshAgent.speed = speed;
     }
-    /*
+    
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Bullet"))
+        if (collision.gameObject.CompareTag("Player") && isStunned == false)
         {
-            TakeDamage(50);
+            print("Attack");
+            animator.SetTrigger("Attack3");
         }
+        if (collision.gameObject.TryGetComponent<PlayerController>(out PlayerController controller) && isStunned == false)
+        {
+            controller.takeDamage(attack);
+        }
+        if (collision.gameObject.CompareTag("Shield"))
+        {
+            stunned();
+        }
+
     }
-    */
+    
     private void Chasing()
     {
         m_PlayerNear = false;
@@ -220,6 +253,33 @@ public class AiController : MonoBehaviour
             }
         }
     }
+
+    public void stunned()
+    {
+        if (dead == false)
+        {
+            Stop();
+            isStunned = true;
+            print("stun");
+            animator.SetBool("Stunned Loop", true);
+            animator.SetBool("WalkForward", false);
+            animator.SetBool("Run Forward", false);
+            m_Rigidbody.constraints = RigidbodyConstraints.FreezeAll;
+        }
+        
+    }
+
+    public void unStun()
+    {
+        isStunned = false;
+        print("unstun");
+        animator.SetBool("Stunned Loop", false);
+        navMeshAgent.isStopped = false;
+        navMeshAgent.speed = 3.5f;
+        m_Rigidbody.constraints = RigidbodyConstraints.None;
+    }
+
+  
    void EnviromentView()
    {
         Collider[] playerInRange = Physics.OverlapSphere(transform.position, viewRadius, playerMask);

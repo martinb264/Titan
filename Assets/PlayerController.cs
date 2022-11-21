@@ -7,23 +7,52 @@ public class PlayerController : MonoBehaviour
 {
     public float health;
     public float maxHealth = 100;
-    public float score;
+    
 
     public HealthBar healthBar;
 
     public Text text;
     public Text DeathText;
+    public Text StoneText;
+    public int stoneValue;
+    public GameObject pickaxe;
+    public GameObject axe;
+    [SerializeField]
+    private GameObject placeAbleObject;
 
     private void Start()
     {
         health = maxHealth;
-        score = 0;
+        
         healthBar.SetMaxHealth(((int)maxHealth));
-        resetScore();
+        
         DeathText.gameObject.SetActive(false);
+
+        pickaxe.SetActive(true);
+        axe.SetActive(false);
+    }
+    private void Update()
+    {
+       
+        if (Input.GetButtonDown("Fire1"))
+        {
+           
+            pickaxe.SetActive(true);
+            axe.SetActive(false);
+        }
+        if (Input.GetButtonDown("Fire2"))
+        {
+           
+            pickaxe.SetActive(false);
+            axe.SetActive(true);
+        }
+        if(Input.GetButtonDown("Fire3"))
+        {
+            spawnStoneObject();
+        }
     }
 
-    private void takeDamage(float damage)
+    public void takeDamage(float damage)
     {
         health -= damage;
         healthBar.SetHealth(((int)health)); 
@@ -36,19 +65,28 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        /*
         if (collision.gameObject.TryGetComponent<AiController>(out AiController controller))
         {
             takeDamage(controller.attack);
         }
-    }
-    public void updateScore()
-    {
-        score += 10;
-        text.text = score.ToString();
+        */
     }
 
-    public void resetScore()
+    public void minedStone(int value)
     {
-        text.text = score.ToString();
+        stoneValue += value;
+        StoneText.text = stoneValue.ToString();
     }
+
+    public void spawnStoneObject()
+    {
+        if (stoneValue >= 10)
+        {
+            stoneValue -= 10;
+            StoneText.text = stoneValue.ToString();
+            Instantiate(placeAbleObject, transform.position, transform.rotation);
+        }
+    }
+
 }
